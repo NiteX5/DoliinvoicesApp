@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Configuración de la API de Dolibarr.
 /// La URL base se obtiene desde variables de entorno (dart-define) en tiempo de compilación
@@ -8,6 +9,9 @@ import 'package:http/http.dart' as http;
 /// Para compilar con URL personalizada:
 /// flutter run --dart-define=DOLIBARR_BASE_URL=https://tu-dominio.com/dolibarr/api/index.php
 class DolibarrService {
+  /// Clave con la que se persiste la URL base en SharedPreferences.
+  static const String _baseUrlKey = 'dolibarr_base_url';
+
   /// URL base de la API de Dolibarr.
   /// Prioridad: 1) SharedPreferences (tiempo de ejecución), 2) dart-define (tiempo de compilación), 3) valor por defecto vacío (requiere configuración).
   String _baseUrl = '';
@@ -16,9 +20,21 @@ class DolibarrService {
     _baseUrl = const String.fromEnvironment('DOLIBARR_BASE_URL');
   }
 
-  /// Establece la URL base en tiempo de ejecución (ej. desde configuración guardada).
-  void setBaseUrl(String url) {
-    _baseUrl = url;
+  /// Carga la URL guardada en SharedPreferences (si existe) por sobre la
+  /// configurada con --dart-define. Se invoca al iniciar la app.
+  Future<void> loadSavedBaseUrl() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_baseUrlKey);
+    if (saved != null && saved.trim().isNotEmpty) {
+      _baseUrl = saved.trim();
+    }
+  }
+
+  /// Establece la URL base en tiempo de ejecución y la persiste para futuras sesiones.
+  Future<void> setBaseUrl(String url) async {
+    _baseUrl = url.trim();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_baseUrlKey, _baseUrl);
   }
 
   /// Obtiene la URL base actual.

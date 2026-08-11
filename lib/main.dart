@@ -10,12 +10,16 @@ import 'invoice_ai/invoice_ai_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SharedPreferences.getInstance();
-  
+
+  // Cargar la URL base de Dolibarr guardada (si existe) antes de iniciar la UI.
+  final dolibarrService = DolibarrService();
+  await dolibarrService.loadSavedBaseUrl();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
-        Provider(create: (_) => DolibarrService()),
+        Provider(create: (_) => dolibarrService),
         Provider(create: (_) => InvoiceAiService()),
       ],
       child: const MyApp(),

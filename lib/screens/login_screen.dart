@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/dolibarr_service.dart';
+import 'settings_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -79,6 +80,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final dolibarrService = context.watch<DolibarrService>();
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -126,7 +129,48 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Colors.grey[600],
                             ),
                           ),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 24),
+                          if (dolibarrService.baseUrl.isEmpty) ...[
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.amber[50],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.amber[200]!),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.warning_amber_rounded,
+                                      color: Colors.amber[800]),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Configura la URL de Dolibarr antes de iniciar sesión',
+                                      style: TextStyle(color: Colors.amber[900]),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const SettingsScreen(),
+                                  ),
+                                );
+                                if (mounted) setState(() {});
+                              },
+                              icon: const Icon(Icons.settings, size: 18),
+                              label: const Text('Configurar URL de Dolibarr'),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
                           TextFormField(
                             controller: _apiKeyController,
                             decoration: const InputDecoration(

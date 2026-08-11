@@ -7,6 +7,7 @@ import 'invoices_screen.dart';
 import 'invoice_form_screen.dart';
 import 'supplier_form_screen.dart';
 import 'project_form_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,6 +32,18 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Facturas SSP'),
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Configuración',
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Cerrar Sesión',
