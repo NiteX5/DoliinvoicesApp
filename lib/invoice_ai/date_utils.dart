@@ -1,18 +1,32 @@
 class DateUtils {
+  // Incluye nombres completos y abreviaturas (el regex de normalize captura
+  // solo la abreviatura, ej. 'mar' de 'Marzo').
   static const Map<String, int> monthNames = {
     'enero': 1,
+    'ene': 1,
     'febrero': 2,
+    'feb': 2,
     'marzo': 3,
+    'mar': 3,
     'abril': 4,
+    'abr': 4,
     'mayo': 5,
+    'may': 5,
     'junio': 6,
+    'jun': 6,
     'julio': 7,
+    'jul': 7,
     'agosto': 8,
+    'ago': 8,
     'septiembre': 9,
     'setiembre': 9,
+    'sep': 9,
     'octubre': 10,
+    'oct': 10,
     'noviembre': 11,
+    'nov': 11,
     'diciembre': 12,
+    'dic': 12,
   };
 
   static String? normalize(String? raw) {
@@ -20,9 +34,10 @@ class DateUtils {
     final normalized = raw.trim();
     print('DateUtils.normalize called with: $normalized');
 
-    // Intentar nombre de mes primero
+    // Intentar nombre de mes primero. Acepta la partícula 'de' común en
+    // fechas en español: '15 de Marzo 2025' o '15 Marzo 2025'.
     final monthNameMatch = RegExp(
-            r'(\d{1,2})[- ]?(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)[a-z]*[- ]?(\d{4})',
+            r'(\d{1,2})[- ]?(?:de )?(ene|feb|mar|abr|may|jun|jul|ago|sep|oct|nov|dic)[a-z]*[- ]?(\d{4})',
             caseSensitive: false)
         .firstMatch(normalized);
     if (monthNameMatch != null) {
