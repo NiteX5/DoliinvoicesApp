@@ -29,12 +29,12 @@ class SkeletonCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Esqueleto del encabezado (título y estado)
-            Row(
+            const Row(
               children: [
                 Expanded(
                   child: _SkeletonLine(width: double.infinity, height: 16),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 _SkeletonLine(width: 80, height: 24, borderRadius: 12),
               ],
             ),
@@ -43,25 +43,25 @@ class SkeletonCard extends StatelessWidget {
             ...List.generate(infoRows, (rowIndex) {
               return Padding(
                 padding: EdgeInsets.only(bottom: rowIndex == infoRows - 1 ? 0 : 10),
-                child: Row(
+                child: const Row(
                   children: [
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _SkeletonLine(width: 60, height: 12),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           _SkeletonLine(width: double.infinity, height: 14),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _SkeletonLine(width: 50, height: 12),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           _SkeletonLine(width: double.infinity, height: 14),
                         ],
                       ),
@@ -73,7 +73,7 @@ class SkeletonCard extends StatelessWidget {
             // Descripción opcional
             if (showDescription) ...[
               const SizedBox(height: 12),
-              _SkeletonLine(width: double.infinity, height: 40, borderRadius: 8),
+              const _SkeletonLine(width: double.infinity, height: 40, borderRadius: 8),
             ],
           ],
         ),

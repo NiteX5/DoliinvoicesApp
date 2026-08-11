@@ -9,10 +9,10 @@ import 'supplier_form_screen.dart';
 
 /// Pantalla de proveedores usando BaseListScreen para eliminar duplicación.
 class SuppliersScreen extends BaseListScreen<Supplier> {
-  SuppliersScreen({super.key});
+  const SuppliersScreen({super.key});
 
   @override
-  BaseListScreenConfig<Supplier> get config => BaseListScreenConfig(
+  BaseListScreenConfig<Supplier> get config => const BaseListScreenConfig(
     title: 'Proveedores',
     searchHint: 'Buscar por nombre, RUT, email, ciudad, giro...',
     sortOptions: [

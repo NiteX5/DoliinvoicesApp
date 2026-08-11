@@ -9,10 +9,10 @@ import 'project_form_screen.dart';
 
 /// Pantalla de proyectos usando BaseListScreen para eliminar duplicación.
 class ProjectsScreen extends BaseListScreen<Project> {
-  ProjectsScreen({super.key});
+  const ProjectsScreen({super.key});
 
   @override
-  BaseListScreenConfig<Project> get config => BaseListScreenConfig(
+  BaseListScreenConfig<Project> get config => const BaseListScreenConfig(
     title: 'Proyectos',
     searchHint: 'Buscar por referencia, título, cliente...',
     sortOptions: [

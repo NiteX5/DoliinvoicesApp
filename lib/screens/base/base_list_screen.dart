@@ -351,7 +351,7 @@ class _BaseListScreenState<T> extends State<BaseListScreen<T>> {
   }
 
   Widget buildLoadingState() {
-    return SkeletonList(
+    return const SkeletonList(
       itemCount: 6,
       infoRows: 3,
       showDescription: true,

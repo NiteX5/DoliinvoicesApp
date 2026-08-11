@@ -17,7 +17,7 @@ class InvoicesScreen extends BaseListScreen<SupplierInvoice> {
   final Map<String, String> _projectMap = {};
 
   @override
-  BaseListScreenConfig<SupplierInvoice> get config => BaseListScreenConfig(
+  BaseListScreenConfig<SupplierInvoice> get config => const BaseListScreenConfig(
     title: 'Facturas',
     searchHint: 'Buscar por referencia, proveedor, proyecto...',
     sortOptions: [
@@ -120,8 +120,8 @@ class InvoicesScreen extends BaseListScreen<SupplierInvoice> {
   }
 
   @override
-  SupplierInvoice enrichItem(SupplierInvoice invoice) {
-    var enriched = invoice;
+  SupplierInvoice enrichItem(SupplierInvoice item) {
+    var enriched = item;
     if ((enriched.supplierName ?? '').isEmpty && enriched.fkSoc != null) {
       final name = _supplierMap[enriched.fkSoc.toString()];
       if (name != null && name.isNotEmpty) {

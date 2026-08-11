@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -647,12 +647,8 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
     }
 
     // También verificar proveedores cargados localmente como respaldo
-    if (existingSupplier == null) {
-      existingSupplier = _findSupplierByRut(supplierRut ?? '');
-    }
-    if (existingSupplier == null) {
-      existingSupplier = _findSupplierByName(supplierName);
-    }
+    existingSupplier ??= _findSupplierByRut(supplierRut ?? '');
+    existingSupplier ??= _findSupplierByName(supplierName);
 
     if (existingSupplier != null) {
       // Proveedor encontrado, seleccionarlo
@@ -1754,7 +1750,7 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Lí­nea "${description}" actualizada'),
+        content: Text('Lí­nea "$description" actualizada'),
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
       ),

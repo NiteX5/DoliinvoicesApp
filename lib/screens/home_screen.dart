@@ -20,8 +20,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     InvoicesScreen(),
-    SuppliersScreen(),
-    ProjectsScreen(),
+    const SuppliersScreen(),
+    const ProjectsScreen(),
   ];
 
   @override
