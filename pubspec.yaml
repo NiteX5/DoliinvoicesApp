@@ -1,0 +1,70 @@
+name: facturas_ssp
+description: Aplicación para gestión de facturas de proveedores con integración Dolibarr y Gemini AI
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # HTTP requests
+  http: ^1.1.0
+  dio: ^5.4.0
+  
+  # State management
+  provider: ^6.1.1
+  
+  # Local storage
+  shared_preferences: ^2.2.2
+  
+  # Camera and image handling
+  camera: ^0.12.0+2
+  image_picker: ^1.0.7
+  
+  # Google Gemini AI
+  google_generative_ai: ^0.4.0
+  
+  # UI components
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  
+  # JSON serialization
+  json_annotation: ^4.8.1
+  
+  # Date formatting
+  intl: ^0.20.3
+  google_mlkit_text_recognition: ^0.16.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.15.1
+  json_serializable: ^6.7.1
+  image: ^4.1.7
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/app_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#2563EB"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
+
+flutter_native_splash:
+  color: "#2563EB"
+  image: assets/icon/splash_logo.png
+  android: true
+  ios: false
+  web: false
+  fullscreen: true
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon/
