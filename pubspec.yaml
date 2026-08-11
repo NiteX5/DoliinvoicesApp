@@ -9,42 +9,31 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
-  # HTTP requests
+
+  # HTTP requests (API REST de Dolibarr y Gemini)
   http: ^1.1.0
-  dio: ^5.4.0
-  
+
   # State management
   provider: ^6.1.1
-  
-  # Local storage
+
+  # Almacenamiento local (sesión y configuración)
   shared_preferences: ^2.2.2
-  
-  # Camera and image handling
-  camera: ^0.12.0+2
+
+  # Selección de imágenes (cámara / galería)
   image_picker: ^1.0.7
-  
-  # Google Gemini AI
-  google_generative_ai: ^0.4.0
-  
-  # UI components
-  cupertino_icons: ^1.0.6
-  flutter_svg: ^2.0.9
-  
-  # JSON serialization
-  json_annotation: ^4.8.1
-  
-  # Date formatting
-  intl: ^0.20.3
+
+  # OCR con ML Kit
   google_mlkit_text_recognition: ^0.16.0
+
+  # Formato de fechas y montos
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  build_runner: ^2.15.1
-  json_serializable: ^6.7.1
-  image: ^4.1.7
+
+  # Generación de iconos y splash (uso por CLI)
   flutter_launcher_icons: ^0.13.1
   flutter_native_splash: ^2.4.0
 
