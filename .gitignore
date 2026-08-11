@@ -67,5 +67,6 @@ flutter_01.png
 local.properties
 
 # Configuración local del asistente de IA (puede contener API keys)
+.claude/
 .claude/settings.json
 .claude/settings.local.json
