@@ -2,8 +2,13 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'constants.dart';
+import '../services/gemini_settings_service.dart';
 
 class GeminiClient {
+  final GeminiSettingsService _settingsService;
+
+  GeminiClient(this._settingsService);
+
   static const List<String> modelNames = [
     'gemini-3.6-flash',
     'gemini-3.5-flash-lite',
@@ -89,6 +94,13 @@ class GeminiClient {
   };
 
   Future<Map<String, dynamic>> extractData(String prompt) async {
+    final apiKey = _settingsService.apiKey;
+    if (apiKey == null || apiKey.isEmpty) {
+      throw StateError(
+        'Configura la API Key de Gemini en Configuración antes de procesar facturas.',
+      );
+    }
+
     final failures = <String>[];
 
     for (final modelName in modelNames) {
@@ -100,7 +112,7 @@ class GeminiClient {
             final response = await http
                 .post(
                   Uri.parse(
-                    'https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent?key=${InvoiceAiConstants.geminiApiKey}',
+                    'https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent?key=$apiKey',
                   ),
                   headers: const {'Content-Type': 'application/json'},
                   body: jsonEncode({
@@ -113,10 +125,12 @@ class GeminiClient {
                     ],
                     'generationConfig': {
                       'temperature': 0,
-                      'topP': 0.1,       // Determinístico: solo tokens más probables
-                      'topK': 1,         // Decodificación greedy (solo el token más probable)
+                      'topP': 0.1, // Determinístico: solo tokens más probables
+                      'topK':
+                          1, // Decodificación greedy (solo el token más probable)
                       'responseMimeType': 'application/json',
-                      'responseSchema': _responseSchema, // Forzar estructura exacta
+                      'responseSchema':
+                          _responseSchema, // Forzar estructura exacta
                     },
                   }),
                 )
@@ -124,11 +138,16 @@ class GeminiClient {
 
             if (response.statusCode != 200) {
               final decoded = jsonDecode(utf8.decode(response.bodyBytes));
-              final error = decoded is Map<String, dynamic> ? decoded['error'] : null;
-              final message = error is Map ? error['message']?.toString() : null;
-              failures.add('$modelName: ${message ?? 'HTTP ${response.statusCode}'}');
+              final error =
+                  decoded is Map<String, dynamic> ? decoded['error'] : null;
+              final message =
+                  error is Map ? error['message']?.toString() : null;
+              failures.add(
+                  '$modelName: ${message ?? 'HTTP ${response.statusCode}'}');
               // No reintentar en errores 4xx (salvo 429)
-              if (response.statusCode >= 400 && response.statusCode < 500 && response.statusCode != 429) {
+              if (response.statusCode >= 400 &&
+                  response.statusCode < 500 &&
+                  response.statusCode != 429) {
                 break;
               }
               // Backoff antes de reintentar
@@ -140,13 +159,15 @@ class GeminiClient {
             final candidates = decoded['candidates'];
             if (candidates is List && candidates.isNotEmpty) {
               final content = candidates.first['content'];
-              final parts = content is Map<String, dynamic> ? content['parts'] : null;
+              final parts =
+                  content is Map<String, dynamic> ? content['parts'] : null;
               if (parts is List && parts.isNotEmpty) {
                 final text = parts.first['text'];
                 if (text is String && text.trim().isNotEmpty) {
                   final parsed = jsonDecode(text);
                   if (parsed is Map<String, dynamic>) {
-                    print('GeminiClient: Success with $modelName on attempt $attempt');
+                    print(
+                        'GeminiClient: Success with $modelName on attempt $attempt');
                     return parsed;
                   }
                 }
@@ -155,7 +176,8 @@ class GeminiClient {
             failures.add('$modelName devolvió JSON vacío o inválido');
             if (attempt < 3) await _backoff(attempt);
           } catch (e, stackTrace) {
-            print('GeminiClient error for $modelName (attempt $attempt): $e\n$stackTrace');
+            print(
+                'GeminiClient error for $modelName (attempt $attempt): $e\n$stackTrace');
             failures.add('$modelName (intento $attempt): $e');
             if (attempt < 3) await _backoff(attempt);
           }
