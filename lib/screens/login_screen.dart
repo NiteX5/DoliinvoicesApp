@@ -13,6 +13,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _baseUrlController;
   late final TextEditingController _apiKeyController;
   bool _isLoading = false;
   String? _errorMessage;
@@ -20,11 +21,15 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    _baseUrlController = TextEditingController(
+      text: context.read<DolibarrService>().baseUrl,
+    );
     _apiKeyController = TextEditingController();
   }
 
   @override
   void dispose() {
+    _baseUrlController.dispose();
     _apiKeyController.dispose();
     super.dispose();
   }
@@ -41,15 +46,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final authService = context.read<AuthService>();
     final dolibarrService = context.read<DolibarrService>();
+    final baseUrl = _baseUrlController.text.trim();
     final apiKey = _apiKeyController.text.trim();
 
     try {
+      await dolibarrService.setBaseUrl(baseUrl);
+
       // Validar conexión con Dolibarr
       final isConnected = await dolibarrService.testConnection(apiKey);
-      
+
       if (!isConnected) {
         setState(() {
-          _errorMessage = 'No se pudo conectar con Dolibarr. Verifica tu API Key.';
+          _errorMessage =
+              'No se pudo conectar con Dolibarr. Verifica tu API Key.';
           _isLoading = false;
         });
         return;
@@ -57,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Guardar sesión
       final success = await authService.login(apiKey);
-      
+
       if (success) {
         if (mounted) {
           setState(() {
@@ -117,17 +126,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 24),
                           Text(
                             'Facturas SSP',
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Sistema de Gestión de Facturas',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: Colors.grey[600],
+                                ),
                           ),
                           const SizedBox(height: 24),
                           if (dolibarrService.baseUrl.isEmpty) ...[
@@ -146,7 +161,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   Expanded(
                                     child: Text(
                                       'Configura la URL de Dolibarr antes de iniciar sesión',
-                                      style: TextStyle(color: Colors.amber[900]),
+                                      style:
+                                          TextStyle(color: Colors.amber[900]),
                                     ),
                                   ),
                                 ],
@@ -161,7 +177,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const SettingsScreen(),
+                                    builder: (context) =>
+                                        const SettingsScreen(),
                                   ),
                                 );
                                 if (mounted) setState(() {});
@@ -171,6 +188,34 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _baseUrlController,
+                            keyboardType: TextInputType.url,
+                            autocorrect: false,
+                            decoration: const InputDecoration(
+                              labelText: 'Endpoint inicial de Dolibarr',
+                              hintText:
+                                  'https://tu-dominio.com/dolibarr/api/index.php',
+                              prefixIcon: Icon(Icons.link),
+                              border: OutlineInputBorder(),
+                              filled: true,
+                            ),
+                            validator: (value) {
+                              final url = value?.trim() ?? '';
+                              final uri = Uri.tryParse(url);
+                              if (url.isEmpty) {
+                                return 'Ingresa el endpoint de Dolibarr';
+                              }
+                              if (uri == null ||
+                                  !uri.hasAuthority ||
+                                  (uri.scheme != 'http' &&
+                                      uri.scheme != 'https')) {
+                                return 'Ingresa una URL http:// o https:// válida';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
                           TextFormField(
                             controller: _apiKeyController,
                             decoration: const InputDecoration(
@@ -202,7 +247,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.error_outline, color: Colors.red[700]),
+                                  Icon(Icons.error_outline,
+                                      color: Colors.red[700]),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
