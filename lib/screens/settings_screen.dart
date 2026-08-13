@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/dolibarr_service.dart';
+import '../services/gemini_settings_service.dart';
 
 /// Pantalla de configuración de la conexión a Dolibarr.
 ///
@@ -16,18 +17,24 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _baseUrlController;
+  late final TextEditingController _geminiApiKeyController;
   bool _isSaving = false;
+  bool _obscureGeminiApiKey = true;
 
   @override
   void initState() {
     super.initState();
     final service = context.read<DolibarrService>();
     _baseUrlController = TextEditingController(text: service.baseUrl);
+    _geminiApiKeyController = TextEditingController(
+      text: context.read<GeminiSettingsService>().apiKey ?? '',
+    );
   }
 
   @override
   void dispose() {
     _baseUrlController.dispose();
+    _geminiApiKeyController.dispose();
     super.dispose();
   }
 
@@ -38,14 +45,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     setState(() => _isSaving = true);
     final service = context.read<DolibarrService>();
+    final geminiSettingsService = context.read<GeminiSettingsService>();
     final url = _baseUrlController.text.trim();
 
     await service.setBaseUrl(url);
+    await geminiSettingsService.setApiKey(_geminiApiKeyController.text);
 
     if (!mounted) return;
     setState(() => _isSaving = false);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('URL de Dolibarr guardada correctamente')),
+      const SnackBar(content: Text('Configuración guardada correctamente')),
     );
     Navigator.pop(context);
   }
@@ -82,7 +91,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         autocorrect: false,
                         decoration: const InputDecoration(
                           labelText: 'URL base de la API',
-                          hintText: 'https://tu-dominio.com/dolibarr/api/index.php',
+                          hintText:
+                              'https://tu-dominio.com/dolibarr/api/index.php',
                           prefixIcon: Icon(Icons.link),
                           border: OutlineInputBorder(),
                         ),
@@ -125,6 +135,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               : const Icon(Icons.save),
                           label: const Text('Guardar'),
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              Text('Gemini', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Card(
+                elevation: 1,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _geminiApiKeyController,
+                        obscureText: _obscureGeminiApiKey,
+                        enableSuggestions: false,
+                        autocorrect: false,
+                        autofillHints: const [AutofillHints.password],
+                        decoration: InputDecoration(
+                          labelText: 'API Key de Gemini',
+                          hintText: 'Ingresa tu API Key de Gemini',
+                          prefixIcon: const Icon(Icons.key),
+                          suffixIcon: IconButton(
+                            tooltip: _obscureGeminiApiKey
+                                ? 'Mostrar API Key'
+                                : 'Ocultar API Key',
+                            icon: Icon(
+                              _obscureGeminiApiKey
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureGeminiApiKey = !_obscureGeminiApiKey;
+                              });
+                            },
+                          ),
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Se guarda cifrada en el almacenamiento seguro del dispositivo. '
+                        'Déjala vacía para eliminar la clave guardada.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                       ),
                     ],
                   ),

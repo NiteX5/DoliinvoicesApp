@@ -6,10 +6,15 @@ import 'gemini_client.dart';
 import 'parser.dart';
 import 'validators.dart';
 import 'mapper.dart';
+import '../services/gemini_settings_service.dart';
 
 class InvoiceAiService {
   final OcrService _ocrService = OcrService();
-  final GeminiClient _geminiClient = GeminiClient();
+  late final GeminiClient _geminiClient;
+
+  InvoiceAiService(GeminiSettingsService settingsService) {
+    _geminiClient = GeminiClient(settingsService);
+  }
 
   Future<DolibarrInvoiceResult> processImage(File imageFile) async {
     print('InvoiceAiService: processing image: ${imageFile.path}');
@@ -20,11 +25,13 @@ class InvoiceAiService {
       print('OcrDocument line $i: ${ocrResult.document.lines[i].text}');
     }
 
-    final prompt = PromptBuilder.buildPrompt(ocrResult.document, ocrResult.documentType);
+    final prompt =
+        PromptBuilder.buildPrompt(ocrResult.document, ocrResult.documentType);
     final geminiResponse = await _geminiClient.extractData(prompt);
     try {
       final parsed = InvoiceParser.parse(geminiResponse);
-      final invoiceResult = InvoiceValidators.validateAndFix(parsed, ocrResult.documentType);
+      final invoiceResult =
+          InvoiceValidators.validateAndFix(parsed, ocrResult.documentType);
       if (invoiceResult.items.isEmpty &&
           invoiceResult.header.numeroDocumento == null &&
           invoiceResult.header.fecha == null &&

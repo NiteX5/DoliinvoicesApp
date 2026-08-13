@@ -87,31 +87,25 @@ flutter pub get
 
 ## ⚙️ Configuración
 
-### 1. Variables de entorno (tiempo de compilación)
+### 1. Endpoint de Dolibarr
 
-La app lee su configuración con `--dart-define`. Copia el ejemplo y rellena tus valores:
+Ingresa el endpoint inicial de la API en la pantalla de login. También puedes
+modificarlo después en **Configuración**. Como alternativa, se puede definir
+un valor inicial de compilación con `--dart-define`:
 
 ```bash
-cp .env.example .env   # solo documentación — los valores se pasan con --dart-define
+flutter run --dart-define=DOLIBARR_BASE_URL=https://tu-dominio.com/dolibarr/api/index.php
 ```
 
 | Variable | Descripción | Obligatoria |
 |---|---|---|
 | `DOLIBARR_BASE_URL` | URL base de la API de Dolibarr (ej. `https://tu-dominio.com/dolibarr/api/index.php`). | ✅ |
-| `GEMINI_API_KEY` | API Key de Google Gemini para la extracción con IA. | ✅* |
-| `DOLIBARR_BANK_ACCOUNT_REF` | Referencia de la cuenta bancaria preferida para pagos. Vacío = primera activa. | ❌ |
 
-\* Obligatoria solo si se usa la captura automática de facturas con IA.
+### 2. API Key de Gemini
 
-### 2. `applicationId` de Android
-
-Crea `android/local.properties` (está en `.gitignore`, no se sube al repo):
-
-```properties
-flutter.applicationId=com.tuempresa.app
-```
-
-Si no se define, la app usa el valor por defecto `com.facturas_ssp.app`.
+Ingresa la clave en **Configuración → Gemini**. La app la guarda cifrada en el
+almacenamiento seguro del dispositivo y no la incorpora al código ni a los
+parámetros de compilación.
 
 ### 3. API Key de Dolibarr
 
@@ -124,11 +118,8 @@ Si no se define, la app usa el valor por defecto `com.facturas_ssp.app`.
 ## ▶️ Ejecución
 
 ```bash
-# Con todas las variables
-flutter run \
-  --dart-define=DOLIBARR_BASE_URL=https://tu-dominio.com/dolibarr/api/index.php \
-  --dart-define=GEMINI_API_KEY=tu_api_key_gemini \
-  --dart-define=DOLIBARR_BANK_ACCOUNT_REF=REF_BANCO
+# Con endpoint inicial opcional
+flutter run --dart-define=DOLIBARR_BASE_URL=https://tu-dominio.com/dolibarr/api/index.php
 ```
 
 ```bash
@@ -193,9 +184,8 @@ La app usa la **API REST** de Dolibarr con el header `DOLAPIKEY`. Endpoints prin
 
 ## 🔐 Seguridad
 
-- ✅ **Sin API keys por defecto ni hardcodeadas** — la de Dolibarr se pide en el login; la de Gemini se inyecta con `--dart-define`.
-- ✅ **`applicationId` de Android parametrizado** en `local.properties` (no se expone el identificador real de producción).
-- ✅ **Cuenta bancaria parametrizada** con `DOLIBARR_BANK_ACCOUNT_REF`.
+- ✅ **Sin API keys por defecto ni hardcodeadas** — la de Dolibarr se pide en el login y la de Gemini se guarda cifrada en el dispositivo.
+- ✅ **`applicationId` de Android:** `doli.facturasocr.com`.
 - ✅ **`.env`, `local.properties` y `.claude/settings*.json` están en `.gitignore`**.
 - ✅ **Auditoría de secretos** realizada antes del commit (sin claves ni tokens en el repositorio).
 
