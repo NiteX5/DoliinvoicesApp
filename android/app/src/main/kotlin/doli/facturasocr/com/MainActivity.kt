@@ -1,4 +1,4 @@
-package com.facturas_ssp.app
+package doli.facturasocr.com
 
 import io.flutter.embedding.android.FlutterActivity
 

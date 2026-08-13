@@ -22,17 +22,8 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
-// Identificador de la aplicación (package). Se parametriza para no exponer el
-// identificador real de producción en el repositorio.
-// Para usar tu propio ID, agrega en local.properties:
-//   flutter.applicationId=com.tuempresa.app
-def flutterApplicationId = localProperties.getProperty('flutter.applicationId')
-if (flutterApplicationId == null || flutterApplicationId.trim().isEmpty()) {
-    flutterApplicationId = 'com.facturas_ssp.app'
-}
-
 android {
-    namespace "com.facturas_ssp.app"
+    namespace "doli.facturasocr.com"
     compileSdk 36
     ndkVersion flutter.ndkVersion
 
@@ -50,7 +41,7 @@ android {
     }
 
     defaultConfig {
-        applicationId flutterApplicationId
+        applicationId "doli.facturasocr.com"
         minSdkVersion flutter.minSdkVersion
         targetSdk 36
         versionCode flutterVersionCode.toInteger()
