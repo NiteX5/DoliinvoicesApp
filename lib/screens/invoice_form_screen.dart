@@ -1458,50 +1458,42 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                           ),
                     ),
                     const SizedBox(height: 16),
-                    if (_lines.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Text(
-                          'No hay lineas agregadas todavia',
-                          style: TextStyle(color: Colors.grey[600]),
+                    // Header with global toggle and add button (always visible)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CheckboxListTile(
+                            title: const Text('Precios con IVA incluido'),
+                            subtitle: const Text(
+                              'El precio unitario de TODOS los productos ya incluye IVA',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            value: _globalPricesIncludeVat,
+                            onChanged: (value) {
+                              setState(() {
+                                _globalPricesIncludeVat = value ?? false;
+                                _syncTotalsFromLines();
+                              });
+                            },
+                            dense: true,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            contentPadding: EdgeInsets.zero,
+                          ),
                         ),
-                      ),
+                        IconButton(
+                          onPressed: _showAddLineBottomSheet,
+                          icon: const Icon(Icons.add_box),
+                          tooltip: 'Agregar producto/servicio',
+                          style: IconButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                            foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Existing lines with inline editing (ExpansionTile)
                     if (_lines.isNotEmpty) ...[
-                      // Encabezado con selector global y botón para agregar.
-                      Row(
-                        children: [
-                          Expanded(
-                            child: CheckboxListTile(
-                              title: const Text('Precios con IVA incluido'),
-                              subtitle: const Text(
-                                'El precio unitario de TODOS los productos ya incluye IVA',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                              value: _globalPricesIncludeVat,
-                              onChanged: (value) {
-                                setState(() {
-                                  _globalPricesIncludeVat = value ?? false;
-                                  _syncTotalsFromLines(); // Recalcula totales al cambiar
-                                });
-                              },
-                              dense: true,
-                              controlAffinity: ListTileControlAffinity.leading,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: _showAddLineBottomSheet,
-                            icon: const Icon(Icons.add_box),
-                            tooltip: 'Agregar producto/servicio',
-                            style: IconButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                              foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // Lista de li­neas con edicion inline (ExpansionTile)
                       ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -1510,9 +1502,9 @@ class _InvoiceFormScreenState extends State<InvoiceFormScreen> {
                         itemBuilder: (context, index) => _buildEditableLineCard(index),
                       ),
                       const SizedBox(height: 16),
-                      // Formulario para agregar nueva li­nea manual (al final)
-                      _buildAddLineForm(),
                     ],
+                    // Manual line form (always visible)
+                    _buildAddLineForm(),
                   ],
                 ),
               ),
