@@ -8,6 +8,7 @@ import 'invoice_form_screen.dart';
 import 'supplier_form_screen.dart';
 import 'project_form_screen.dart';
 import 'settings_screen.dart';
+import 'expense_report_form_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,6 +24,20 @@ class _HomeScreenState extends State<HomeScreen> {
     InvoicesScreen(),
     const SuppliersScreen(),
     const ProjectsScreen(),
+    const ExpenseReportFormScreen(),
+  ];
+
+  final List<String> _screenLabels = const [
+    'Facturas',
+    'Proveedores',
+    'Proyectos',
+    'Gastos',
+  ];
+  final List<IconData> _screenIcons = const [
+    Icons.receipt_long,
+    Icons.business,
+    Icons.folder,
+    Icons.money,
   ];
 
   @override
@@ -59,63 +74,65 @@ class _HomeScreenState extends State<HomeScreen> {
             _selectedIndex = index;
           });
         },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long),
-            label: 'Facturas',
+        destinations: List.generate(
+          _screens.length,
+          (index) => NavigationDestination(
+            icon: Icon(_screenIcons[index]),
+            label: _screenLabels[index],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.business),
-            label: 'Proveedores',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.folder),
-            label: 'Proyectos',
-          ),
-        ],
+        ),
       ),
-      floatingActionButton: _selectedIndex == 0
-          ? FloatingActionButton.extended(
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const InvoiceFormScreen(),
-                  ),
-                );
-                setState(() {});
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Nueva Factura'),
-            )
-          : _selectedIndex == 1
-              ? FloatingActionButton.extended(
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SupplierFormScreen(),
-                      ),
-                    );
-                    setState(() {});
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Nuevo Proveedor'),
-                )
-              : FloatingActionButton.extended(
-                  onPressed: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProjectFormScreen(),
-                      ),
-                    );
-                    setState(() {});
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Nuevo Proyecto'),
-                ),
+      floatingActionButton: _buildFloatingActionButton(),
     );
+  }
+
+  Widget? _buildFloatingActionButton() {
+    switch (_selectedIndex) {
+      case 0:
+        return FloatingActionButton.extended(
+          onPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const InvoiceFormScreen(),
+              ),
+            );
+            setState(() {});
+          },
+          icon: const Icon(Icons.add),
+          label: const Text('Nueva Factura'),
+        );
+      case 1:
+        return FloatingActionButton.extended(
+          onPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SupplierFormScreen(),
+              ),
+            );
+            setState(() {});
+          },
+          icon: const Icon(Icons.add),
+          label: const Text('Nuevo Proveedor'),
+        );
+      case 2:
+        return FloatingActionButton.extended(
+          onPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProjectFormScreen(),
+              ),
+            );
+            setState(() {});
+          },
+          icon: const Icon(Icons.add),
+          label: const Text('Nuevo Proyecto'),
+        );
+      default:
+        return null;
+    }
   }
 
   void _showLogoutDialog(BuildContext context) {

@@ -552,6 +552,186 @@ class DolibarrService {
     return double.tryParse(value?.toString().replaceAll(',', '.') ?? '');
   }
 
+  // ===========================================================================
+  // Notas de gastos (Expense Reports) - mdulo de gastos de Dolibarr.
+  // Un "centro de gasto" se modela como una nota de gasto (expensereport) que
+  // agrupa varias líneas de gasto, cada una asociada a un proyecto.
+  // Dolibarr usa timestamps Unix en segundos para los campos de fecha.
+  // ===========================================================================
+
+  /// Obtiene los tipos de gasto del diccionario c_type_fees de Dolibarr.
+  /// Retorna pares {id, label, code, accountancyCode?} para el selector de Tipo.
+  Future<List<Map<String, dynamic>>> getExpenseTypes(String apiKey) async {
+    const endpoints = [
+      'setup/dictionary/c_type_fees?limit=100',
+      'setup/dictionary/expense_types?limit=100',
+    ];
+
+    for (final endpoint in endpoints) {
+      try {
+        final result = await get(endpoint, apiKey);
+        final list = _normalizeExpenseTypes(_asList(result));
+        if (list.isNotEmpty) return list;
+      } catch (e) {
+        print('Error al obtener tipos de gasto desde $endpoint: $e');
+      }
+    }
+    return [];
+  }
+
+  List<Map<String, dynamic>> _normalizeExpenseTypes(
+      List<Map<String, dynamic>> raw) {
+    final list = <Map<String, dynamic>>[];
+    for (final item in raw) {
+      final map = Map<String, dynamic>.from(item);
+      final id = _asInt(map['id'] ?? map['rowid'] ?? map['code']);
+      final label = map['label']?.toString() ?? map['libelle']?.toString() ?? '';
+      // Dolibarr almacena a veces label como "CodeLabel" o "00xLabel"; limpiar.
+      final cleanLabel = _cleanExpenseTypeLabel(label, map);
+      if (id != null && cleanLabel.isNotEmpty) {
+        list.add({
+          'id': id,
+          'code': map['code']?.toString() ?? '',
+          'label': cleanLabel,
+          'accountancyCode': map['accountancy_code']?.toString(),
+        });
+      }
+    }
+    return list;
+  }
+
+  /// Limpia el label de un tipo de gasto quitando el prefijo de código si existe.
+  String _cleanExpenseTypeLabel(String label, Map map) {
+    if (label.isEmpty) return '';
+    final code = map['code']?.toString() ?? '';
+    if (code.isNotEmpty &&
+        label.toLowerCase().startsWith(code.toLowerCase())) {
+      return label.substring(code.length).trim();
+    }
+    // Quitar prefijos numéricos tipo "00xLabel".
+    final match = RegExp(r'^\d{2,4}').firstMatch(label);
+    if (match != null) {
+      final rest = label.substring(match.end).trim();
+      return rest.isNotEmpty ? rest : label;
+    }
+    return label.trim();
+  }
+
+  /// Crea la cabecera de una nota de gasto (centro de gasto).
+  /// El rango mensual (date_debut / date_fin) se deriva de la fecha de emisión
+  /// de la boleta, according al formato de fechas de Dolibarr (segundos Unix).
+  Future<int> createExpenseReport({
+    required String apiKey,
+    required int userId,
+    required DateTime invoiceDate,
+    String? ref,
+  }) async {
+    // Primer y último instante del mes de la boleta (rango del centro de gasto).
+    final dateDebut = DateTime(invoiceDate.year, invoiceDate.month, 1, 0, 0, 0);
+    final dateFin = DateTime(
+        invoiceDate.year, invoiceDate.month + 1, 0, 23, 59, 59);
+
+    final data = <String, dynamic>{
+      'fk_user_author': userId,
+      'fk_user_valid': userId,
+      'date_debut': dateDebut.millisecondsSinceEpoch ~/ 1000,
+      'date_fin': dateFin.millisecondsSinceEpoch ~/ 1000,
+      'date_create': DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      if (ref != null && ref.trim().isNotEmpty) 'ref': ref.trim(),
+      'note_public': '',
+      'note_private': '',
+    };
+
+    final result = await post('expensereports', apiKey, data);
+    return _extractId(result, 'expensereport');
+  }
+
+  /// Agrega una línea de gasto a una nota de gasto existente.
+  /// Cada línea puede asociarse a un proyecto (fk_project) y un tipo (fk_c_typefee).
+  Future<void> addExpenseReportLine({
+    required int expenseReportId,
+    required String apiKey,
+    required DateTime date,
+    required int typeFeeId,
+    required String description,
+    required double qty,
+    required double valueUnit, // Precio unitario neto (sin IVA) - HT
+    required double vatRate, // Tasa de IVA (%)
+    int? projectId,
+  }) async {
+    final data = <String, dynamic>{
+      'date': date.millisecondsSinceEpoch ~/ 1000,
+      'fk_c_typefee': typeFeeId,
+      'fk_projet': projectId ?? 0,
+      'comments': description,
+      'qty': qty,
+      'value_unit': valueUnit,
+      'vatrate': vatRate,
+      'vatrate_npr': 0,
+      'fk_ecm_files': 0,
+      // value_ht y total_ht los calcula Dolibarr en base a qty y value_unit.
+    };
+
+    await post('expensereports/$expenseReportId/lines', apiKey, data);
+  }
+
+  /// Valida (setdraft -> approve) una nota de gasto para que sea definitiva.
+  Future<void> setDraftExpenseReport(int id, String apiKey) async {
+    await post('expensereports/$id/setdraft', apiKey, {});
+  }
+
+  /// Aprueba una nota de gasto para que sea definitiva.
+  Future<void> approveExpenseReport(int id, String apiKey) async {
+    await post('expensereports/$id/approve', apiKey, {});
+  }
+
+  /// Obtiene el identificador del usuario actual (requerido para crear notas de gasto).
+  Future<int> getCurrentUserId(String apiKey) async {
+    for (final endpoint in ['users/me', 'users/info']) {
+      try {
+        final result = await get(endpoint, apiKey);
+        if (result is Map) {
+          final id = _asInt(result['id'] ?? result['rowid'] ?? result['user_id']);
+          if (id != null && id > 0) return id;
+        }
+      } catch (_) {
+        // Probar el siguiente endpoint.
+      }
+    }
+    throw StateError('No se pudo obtener el identificador del usuario actual.');
+  }
+
+  /// Adjunta la imagen escaneada de la boleta a una nota de gasto.
+  /// Usa el endpoint de documentos de Dolibarr (modulepart=expensereport).
+  Future<void> attachExpenseReportImage({
+    required int expenseReportId,
+    required String filePath,
+    required String fileName,
+    required String apiKey,
+  }) async {
+    final file = http.MultipartRequest(
+      'POST',
+      _buildUri(
+          'documents?modulepart=expensereport&file=${Uri.encodeComponent(fileName)}'),
+    );
+    file.headers.addAll({
+      'Accept': 'application/json; charset=utf-8',
+      'DOLAPIKEY': apiKey,
+    });
+    file.files.add(await http.MultipartFile.fromPath('file', filePath,
+        filename: fileName));
+    final streamed = await file.send();
+    final response = await http.Response.fromStream(streamed);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      print('DolibarrService: fallo adjuntar imagen (${response.statusCode}): '
+          '${response.body}');
+      // No lanzar: la imagen es complementaria, el gasto ya est creado.
+    } else {
+      print('DolibarrService: imagen adjuntada al gasto $expenseReportId '
+          '($fileName)');
+    }
+  }
+
   // Validar conexión
   Future<bool> testConnection(String apiKey) async {
     try {
